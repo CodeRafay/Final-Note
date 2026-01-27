@@ -1,0 +1,284 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// User roles enum
+enum UserRole {
+  USER
+  ADMIN
+}
+
+// Switch status enum - Core state machine states
+enum SwitchStatus {
+  ACTIVE
+  OVERDUE
+  GRACE_PERIOD
+  PENDING_VERIFICATION
+  VERIFIED
+  EXECUTED
+  CANCELED
+  PAUSED
+}
+
+// Verifier status enum
+enum VerifierStatus {
+  INVITED
+  ACCEPTED
+  REVOKED
+}
+
+// Verification vote enum
+enum VerificationVote {
+  CONFIRM
+  DENY
+}
+
+// Email delivery status enum
+enum EmailDeliveryStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+// Users table
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  passwordHash  String    @map("password_hash")
+  name          String?
+  role          UserRole  @default(USER)
+  emailVerified Boolean   @default(false) @map("email_verified")
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  switches      Switch[]
+  sessions      Session[]
+
+  @@map("users")
+}
+
+// Sessions for JWT-based authentication
+model Session {
+  id           String   @id @default(cuid())
+  userId       String   @map("user_id")
+  token        String   @unique
+  expiresAt    DateTime @map("expires_at")
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  // Relations
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([token])
+  @@map("sessions")
+}
+
+// Dead Man's Switches
+model Switch {
+  id                      String       @id @default(cuid())
+  userId                  String       @map("user_id")
+  name                    String
+  status                  SwitchStatus @default(ACTIVE)
+  checkInIntervalDays     Int          @map("check_in_interval_days")
+  gracePeriodDays         Int          @map("grace_period_days")
+  verificationWindowDays  Int          @map("verification_window_days") @default(7)
+  finalDelayHours         Int          @map("final_delay_hours") @default(24)
+  useVerifiers            Boolean      @default(false) @map("use_verifiers")
+  requiredConfirmations   Int          @default(2) @map("required_confirmations")
+  lastCheckInAt           DateTime?    @map("last_check_in_at")
+  nextCheckInDueAt        DateTime?    @map("next_check_in_due_at")
+  gracePeriodEndsAt       DateTime?    @map("grace_period_ends_at")
+  scheduledExecutionAt    DateTime?    @map("scheduled_execution_at")
+  createdAt               DateTime     @default(now()) @map("created_at")
+  updatedAt               DateTime     @updatedAt @map("updated_at")
+
+  // Relations
+  user                    User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  recipients              Recipient[]
+  verifiers               Verifier[]
+  verificationRequests    VerificationRequest[]
+  auditLogs               AuditLog[]
+
+  @@index([userId])
+  @@index([status])
+  @@index([nextCheckInDueAt])
+  @@map("switches")
+}
+
+// Recipients of the final messages
+model Recipient {
+  id          String   @id @default(cuid())
+  switchId    String   @map("switch_id")
+  email       String
+  name        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  switch      Switch   @relation(fields: [switchId], references: [id], onDelete: Cascade)
+  message     Message?
+
+  @@index([switchId])
+  @@map("recipients")
+}
+
+// Encrypted messages for recipients
+model Message {
+  id                String          @id @default(cuid())
+  switchId          String          @map("switch_id")
+  recipientId       String          @unique @map("recipient_id")
+  encryptedContent  String          @map("encrypted_content") @db.Text
+  encryptionIv      String          @map("encryption_iv")
+  subject           String?
+  createdAt         DateTime        @default(now()) @map("created_at")
+  updatedAt         DateTime        @updatedAt @map("updated_at")
+
+  // Relations
+  recipient         Recipient       @relation(fields: [recipientId], references: [id], onDelete: Cascade)
+  emailDeliveries   EmailDelivery[]
+
+  @@index([switchId])
+  @@map("messages")
+}
+
+// Verifiers for switch verification
+model Verifier {
+  id          String         @id @default(cuid())
+  switchId    String         @map("switch_id")
+  email       String
+  name        String?
+  status      VerifierStatus @default(INVITED)
+  inviteToken String?        @unique @map("invite_token")
+  tokenExpiresAt DateTime?   @map("token_expires_at")
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  switch      Switch               @relation(fields: [switchId], references: [id], onDelete: Cascade)
+  votes       VerificationVoteRecord[]
+
+  @@index([switchId])
+  @@index([email])
+  @@map("verifiers")
+}
+
+// Verification request for a switch
+model VerificationRequest {
+  id                    String    @id @default(cuid())
+  switchId              String    @map("switch_id")
+  startedAt             DateTime  @default(now()) @map("started_at")
+  expiresAt             DateTime  @map("expires_at")
+  requiredConfirmations Int       @map("required_confirmations")
+  completedAt           DateTime? @map("completed_at")
+  result                String?   // 'confirmed', 'denied', 'expired'
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  switch                Switch                   @relation(fields: [switchId], references: [id], onDelete: Cascade)
+  votes                 VerificationVoteRecord[]
+
+  @@index([switchId])
+  @@index([expiresAt])
+  @@map("verification_requests")
+}
+
+// Verification votes from verifiers
+model VerificationVoteRecord {
+  id                    String           @id @default(cuid())
+  verificationRequestId String           @map("verification_request_id")
+  verifierId            String           @map("verifier_id")
+  vote                  VerificationVote
+  votedAt               DateTime         @default(now()) @map("voted_at")
+  ipAddress             String?          @map("ip_address")
+  userAgent             String?          @map("user_agent")
+
+  // Relations
+  verificationRequest   VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  verifier              Verifier            @relation(fields: [verifierId], references: [id], onDelete: Cascade)
+
+  // Ensure each verifier can only vote once per request
+  @@unique([verificationRequestId, verifierId])
+  @@index([verificationRequestId])
+  @@map("verification_votes")
+}
+
+// Email delivery tracking
+model EmailDelivery {
+  id               String              @id @default(cuid())
+  messageId        String              @map("message_id")
+  provider         String              @default("mailersend")
+  status           EmailDeliveryStatus @default(PENDING)
+  providerResponse Json?               @map("provider_response")
+  providerMessageId String?            @map("provider_message_id")
+  attemptedAt      DateTime?           @map("attempted_at")
+  sentAt           DateTime?           @map("sent_at")
+  failedAt         DateTime?           @map("failed_at")
+  errorMessage     String?             @map("error_message")
+  retryCount       Int                 @default(0) @map("retry_count")
+  createdAt        DateTime            @default(now()) @map("created_at")
+
+  // Relations
+  message          Message             @relation(fields: [messageId], references: [id], onDelete: Cascade)
+
+  @@index([messageId])
+  @@index([status])
+  @@map("email_deliveries")
+}
+
+// Audit logs - append only
+model AuditLog {
+  id         String   @id @default(cuid())
+  entityType String   @map("entity_type")
+  entityId   String   @map("entity_id")
+  action     String
+  userId     String?  @map("user_id")
+  metadata   Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // Optional relation to switch for easy filtering
+  switch     Switch?  @relation(fields: [entityId], references: [id], onDelete: SetNull)
+
+  @@index([entityType, entityId])
+  @@index([userId])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// Check-in tokens for secure check-in links
+model CheckInToken {
+  id        String    @id @default(cuid())
+  switchId  String    @map("switch_id")
+  token     String    @unique
+  expiresAt DateTime  @map("expires_at")
+  usedAt    DateTime? @map("used_at")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  @@index([token])
+  @@index([switchId])
+  @@map("checkin_tokens")
+}
+
+// Verification tokens for secure verification links
+model VerificationToken {
+  id                    String    @id @default(cuid())
+  verificationRequestId String    @map("verification_request_id")
+  verifierId            String    @map("verifier_id")
+  token                 String    @unique
+  expiresAt             DateTime  @map("expires_at")
+  usedAt                DateTime? @map("used_at")
+  createdAt             DateTime  @default(now()) @map("created_at")
+
+  @@index([token])
+  @@map("verification_tokens")
+}
