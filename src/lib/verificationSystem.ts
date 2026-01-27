@@ -351,6 +351,9 @@ export async function submitVerificationVote(
     });
     
     // If vote is DENY, immediately cancel verification
+    // SECURITY: We use verificationDeniedAt instead of lastCheckInAt to track
+    // that this was a verifier action, not owner check-in. This prevents
+    // malicious verifiers from keeping a switch active indefinitely.
     if (input.vote === VerificationVote.DENY) {
       await tx.verificationRequest.update({
         where: { id: verificationRequest.id },
@@ -360,15 +363,12 @@ export async function submitVerificationVote(
         },
       });
       
-      // Reset switch to active
+      // Pause the switch instead of resetting - requires owner check-in to resume
+      // This prevents malicious verifiers from keeping the switch active indefinitely
       await tx.switch.update({
         where: { id: verificationRequest.switchId },
         data: {
-          status: 'ACTIVE',
-          lastCheckInAt: new Date(),
-          nextCheckInDueAt: new Date(
-            Date.now() + verificationRequest.switch.checkInIntervalDays * 24 * 60 * 60 * 1000
-          ),
+          status: 'PAUSED',
           gracePeriodEndsAt: null,
           scheduledExecutionAt: null,
         },

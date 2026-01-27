@@ -43,7 +43,7 @@ export function encrypt(plaintext: string): { encrypted: string; iv: string } {
   
   return {
     encrypted: combined,
-    iv: iv.toString('base64'),
+    iv: iv.toString('base64'), // Included for potential future needs (separate storage)
   };
 }
 
@@ -51,29 +51,39 @@ export function encrypt(plaintext: string): { encrypted: string; iv: string } {
  * Decrypt a string encrypted with the encrypt function
  */
 export function decrypt(encryptedData: string): string {
-  const key = getEncryptionKey();
-  
-  const parts = encryptedData.split(':');
-  if (parts.length !== 4) {
-    throw new Error('Invalid encrypted data format');
+  try {
+    const key = getEncryptionKey();
+    
+    const parts = encryptedData.split(':');
+    if (parts.length !== 4) {
+      throw new Error('Decryption failed');
+    }
+    
+    const [saltB64, ivB64, authTagB64, encrypted] = parts;
+    
+    // Validate base64 encoding
+    if (!saltB64 || !ivB64 || !authTagB64 || !encrypted) {
+      throw new Error('Decryption failed');
+    }
+    
+    const salt = Buffer.from(saltB64, 'base64');
+    const iv = Buffer.from(ivB64, 'base64');
+    const authTag = Buffer.from(authTagB64, 'base64');
+    
+    // Derive the same key using scrypt
+    const derivedKey = scryptSync(key, salt, KEY_LENGTH);
+    
+    const decipher = createDecipheriv(ALGORITHM, derivedKey, iv);
+    decipher.setAuthTag(authTag);
+    
+    let decrypted = decipher.update(encrypted, 'base64', 'utf8');
+    decrypted += decipher.final('utf8');
+    
+    return decrypted;
+  } catch {
+    // Generic error message to prevent information leakage
+    throw new Error('Decryption failed');
   }
-  
-  const [saltB64, ivB64, authTagB64, encrypted] = parts;
-  
-  const salt = Buffer.from(saltB64, 'base64');
-  const iv = Buffer.from(ivB64, 'base64');
-  const authTag = Buffer.from(authTagB64, 'base64');
-  
-  // Derive the same key using scrypt
-  const derivedKey = scryptSync(key, salt, KEY_LENGTH);
-  
-  const decipher = createDecipheriv(ALGORITHM, derivedKey, iv);
-  decipher.setAuthTag(authTag);
-  
-  let decrypted = decipher.update(encrypted, 'base64', 'utf8');
-  decrypted += decipher.final('utf8');
-  
-  return decrypted;
 }
 
 /**

@@ -248,7 +248,25 @@ export async function sendVerificationRequest(
 }
 
 // Email template functions
+
+/**
+ * Escape HTML entities to prevent XSS
+ */
+function escapeHtml(text: string): string {
+  const map: Record<string, string> = {
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#039;',
+  };
+  return text.replace(/[&<>"']/g, (char) => map[char] || char);
+}
+
 function wrapInEmailTemplate(content: string, recipientName: string | null): string {
+  const escapedContent = escapeHtml(content);
+  const escapedName = recipientName ? escapeHtml(recipientName) : 'Friend';
+  
   return `
 <!DOCTYPE html>
 <html>
@@ -269,9 +287,9 @@ function wrapInEmailTemplate(content: string, recipientName: string | null): str
     <h1>Final Note</h1>
   </div>
   <div class="content">
-    <p>Dear ${recipientName || 'Friend'},</p>
+    <p>Dear ${escapedName},</p>
     <p>Someone special wanted you to receive this message:</p>
-    <div class="message">${content.replace(/\n/g, '<br>')}</div>
+    <div class="message">${escapedContent.replace(/\n/g, '<br>')}</div>
   </div>
   <div class="footer">
     <p>This message was sent via Final Note - A secure dead man's switch service.</p>

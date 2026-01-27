@@ -252,8 +252,11 @@ export async function processVerificationExpiry(): Promise<{
           },
         });
         
-        // Keep switch in pending verification - admin will need to intervene
-        // Or we could reset to active - for safety, we'll leave it paused
+        // SAFETY DECISION: When verification expires without quorum, pause the switch.
+        // This requires admin intervention, which is safer than:
+        // 1. Auto-executing (could send messages without proper verification)
+        // 2. Auto-resetting (could allow malicious stalling indefinitely)
+        // Admin can review audit logs and make an informed decision.
         await tx.switch.update({
           where: { id: request.switchId },
           data: {
@@ -269,7 +272,7 @@ export async function processVerificationExpiry(): Promise<{
             action: AUDIT_ACTIONS.VERIFICATION_EXPIRED,
             metadata: {
               switchId: request.switchId,
-              reason: 'Verification window expired without quorum',
+              reason: 'Verification window expired without quorum - admin intervention required',
             },
           },
         });
