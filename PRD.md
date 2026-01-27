@@ -56,18 +56,21 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 - Next.js Route Handlers (API)
 - Node.js runtime
-- Supabase server client
+- Prisma server client
 
 ### Database
 
-- **Supabase PostgreSQL**
+- **Prisma PostgreSQL**
 - SQL migrations
 - Row Level Security (RLS)
 - ENUMs and constraints for state safety
 
 ### Authentication
 
-Removed: No account creation or authentication. Each deployment is self-hosted and private to the user.
+- Prisma Auth (email/password)
+- Session-based JWT
+- Users must create an account to use Final Note
+- Admin roles for system management
 
 ### Email
 
@@ -238,11 +241,16 @@ Removed: No account creation or authentication. Each deployment is self-hosted a
 
 ---
 
-## 13. Database Schema (Supabase / PostgreSQL)
+## 13. Database Schema (Prisma / PostgreSQL)
 
 ### Core Tables
 
-// Removed: `users` table, as there is no account system in self-hosted version.
+#### `users`
+
+- id (uuid, PK)
+- email
+- password_hash
+- created_at
 
 #### `switches`
 
@@ -318,7 +326,7 @@ Removed: No account creation or authentication. Each deployment is self-hosted a
 ## 14. Security Requirements
 
 - HTTPS everywhere
-- Supabase RLS enforcing ownership
+- Prisma RLS enforcing ownership
 - Encrypted messages at rest
 - Expiring, single-use verification links
 - Immutable audit logs
@@ -421,11 +429,11 @@ Removed: No account creation or authentication. Each deployment is self-hosted a
 
 ---
 
-## 20. Deployment (Vercel + Supabase)
+## 20. Deployment (Vercel + Prisma)
 
 ### Steps
 
-1. Create Supabase project
+1. Create Prisma project
 2. Apply SQL migrations
 3. Configure RLS
 4. Configure MailerSend
@@ -464,3 +472,31 @@ Removed: No account creation or authentication. Each deployment is self-hosted a
 > The application name is Final Note. Use this name in all user-facing content and documentation. The home page must clearly explain the purpose, workflow, and value of Final Note as described above.
 
 ---
+
+## Centralized Deployment
+
+Final Note will be a centralized system with a single deployment. All users will create accounts and use the same instance. The system will include admin controls for managing users and system-wide settings.
+
+### Authentication
+
+- Prisma Auth (email/password)
+- Session-based JWT
+- Users must create an account to use Final Note
+- Admin roles for system management
+
+### Admin Pages
+
+- Accessible only to designated admin users
+- Admins can manage:
+  - User accounts
+  - System-wide settings
+  - Emergency overrides
+  - Logs and monitoring
+
+### System Pages
+
+- Restricted to admins
+- Includes:
+  - System health checks
+  - Audit logs
+  - Background job monitoring
