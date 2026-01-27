@@ -2,6 +2,10 @@
 
 ## App Name: Final Note
 
+## Open Source Notice
+
+Final Note is an open source project. Anyone can review, use, modify, and deploy their own instance. See the repository for license and contribution details.
+
 ## Final Note: Verified Dead Man’s Switch Web Application
 
 ---
@@ -24,7 +28,7 @@ With Final Note, you write private emails and choose who should receive them. Th
 
 ### When?
 
-You control the check-in intervals—ranging from days to years. By default, Final Note will remind you at set intervals after your last check-in. If you don’t respond to any reminders, your messages will be sent after the final waiting period. Free accounts may have limited options for interval customization.
+You control the check-in intervals—ranging from days to years. By default, Final Note will remind you at set intervals after your last check-in. If you don’t respond to any reminders, your messages will be sent after the final waiting period.
 
 ---
 
@@ -63,9 +67,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 ### Authentication
 
-- Supabase Auth (email/password)
-- Session-based JWT
-- Users must create an account to use Final Note
+Removed: No account creation or authentication. Each deployment is self-hosted and private to the user.
 
 ### Email
 
@@ -85,7 +87,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 ### 4.1 User (Switch Owner)
 
-- Creates and configures dead man’s switches
+- Configures dead man’s switches
 - Sets check-in frequency
 - Optionally appoints verifiers (user is asked if they want verifiers; if yes, user specifies the number of verifiers)
 - Defines recipients and messages
@@ -240,11 +242,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 ### Core Tables
 
-#### `users`
-
-- id (uuid, PK)
-- email
-- created_at
+// Removed: `users` table, as there is no account system in self-hosted version.
 
 #### `switches`
 
@@ -408,6 +406,10 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 - `SECURITY.md`
 - `DEPLOYMENT.md`
 - `CONTRIBUTING.md`
+
+### Note
+
+- No account creation or authentication. Each deployment is private to the user.
 
 ### README Must Include
 
