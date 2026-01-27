@@ -1,10 +1,9 @@
 // Encryption utilities for sensitive data
-import { createCipheriv, createDecipheriv, randomBytes, scryptSync } from 'crypto';
+import { createCipheriv, createDecipheriv, randomBytes, scryptSync, createHash } from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
 const IV_LENGTH = 16;
 const SALT_LENGTH = 16;
-const TAG_LENGTH = 16;
 const KEY_LENGTH = 32;
 
 function getEncryptionKey(): Buffer {
@@ -99,6 +98,5 @@ export function generateUrlSafeToken(length: number = 32): string {
  * Hash a token for storage (one-way)
  */
 export function hashToken(token: string): string {
-  const { createHash } = require('crypto');
   return createHash('sha256').update(token).digest('hex');
 }

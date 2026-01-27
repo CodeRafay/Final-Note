@@ -1,5 +1,6 @@
 // Audit logging utilities
 import { prisma } from './database';
+import { Prisma } from '@prisma/client';
 import type { CreateAuditLogInput, AuditLog } from '@/types/audit';
 
 /**
@@ -12,7 +13,7 @@ export async function createAuditLog(input: CreateAuditLogInput): Promise<AuditL
       entityId: input.entityId,
       action: input.action,
       userId: input.userId || null,
-      metadata: input.metadata || null,
+      metadata: input.metadata as Prisma.InputJsonValue || Prisma.JsonNull,
       ipAddress: input.ipAddress || null,
       userAgent: input.userAgent || null,
     },

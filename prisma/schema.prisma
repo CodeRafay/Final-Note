@@ -163,8 +163,9 @@ model Verifier {
   updatedAt   DateTime       @updatedAt @map("updated_at")
 
   // Relations
-  switch      Switch               @relation(fields: [switchId], references: [id], onDelete: Cascade)
-  votes       VerificationVoteRecord[]
+  switch             Switch               @relation(fields: [switchId], references: [id], onDelete: Cascade)
+  votes              VerificationVoteRecord[]
+  verificationTokens VerificationToken[]
 
   @@index([switchId])
   @@index([email])
@@ -185,6 +186,7 @@ model VerificationRequest {
   // Relations
   switch                Switch                   @relation(fields: [switchId], references: [id], onDelete: Cascade)
   votes                 VerificationVoteRecord[]
+  verificationTokens    VerificationToken[]
 
   @@index([switchId])
   @@index([expiresAt])
@@ -278,6 +280,10 @@ model VerificationToken {
   expiresAt             DateTime  @map("expires_at")
   usedAt                DateTime? @map("used_at")
   createdAt             DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  verificationRequest   VerificationRequest @relation(fields: [verificationRequestId], references: [id], onDelete: Cascade)
+  verifier              Verifier            @relation(fields: [verifierId], references: [id], onDelete: Cascade)
 
   @@index([token])
   @@map("verification_tokens")

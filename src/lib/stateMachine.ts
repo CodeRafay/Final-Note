@@ -1,6 +1,5 @@
 // State machine for switch lifecycle
 import { prisma } from './database';
-import { createAuditLog } from './audit';
 import { SwitchStatus, VALID_TRANSITIONS, isValidTransition } from '@/types/switch';
 import { ENTITY_TYPES, AUDIT_ACTIONS } from '@/types/audit';
 

@@ -2,7 +2,7 @@
 import { MailerSend, EmailParams, Recipient as MSRecipient, Sender } from 'mailersend';
 import { prisma } from './database';
 import { createAuditLog } from './audit';
-import type { SendEmailInput, EmailTemplate } from '@/types/email';
+import type { SendEmailInput } from '@/types/email';
 import { ENTITY_TYPES, AUDIT_ACTIONS } from '@/types/audit';
 
 let mailerSend: MailerSend | null = null;
