@@ -9,6 +9,20 @@ import { ENTITY_TYPES, AUDIT_ACTIONS } from '@/types/audit';
 let transporter: Transporter | null = null;
 
 /**
+ * Sanitize a name to prevent email header injection.
+ * Removes or escapes characters that could be used for header injection.
+ */
+function sanitizeName(name: string): string {
+  // Remove newlines, carriage returns, and control characters that could enable header injection
+  // Escape backslashes first, then double quotes
+  return name
+    .replace(/[\r\n\x00-\x1f]/g, '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .trim();
+}
+
+/**
  * Get or create the Nodemailer transporter configured for Gmail SMTP
  */
 function getTransporter(): Transporter {
@@ -33,8 +47,19 @@ function getTransporter(): Transporter {
   return transporter;
 }
 
+/**
+ * Reset the transporter (useful for testing or credential changes)
+ */
+export function resetTransporter(): void {
+  transporter = null;
+}
+
 function getFromEmail(): string {
-  return process.env.GMAIL_USER || 'noreply@example.com';
+  const user = process.env.GMAIL_USER;
+  if (!user) {
+    throw new Error('GMAIL_USER must be configured');
+  }
+  return user;
 }
 
 function getFromName(): string {
@@ -52,9 +77,13 @@ export async function sendEmail(input: SendEmailInput): Promise<{
   try {
     const transport = getTransporter();
     
+    // Sanitize names to prevent header injection
+    const fromName = sanitizeName(getFromName());
+    const toName = input.toName ? sanitizeName(input.toName) : undefined;
+    
     const mailOptions = {
-      from: `"${getFromName()}" <${getFromEmail()}>`,
-      to: input.toName ? `"${input.toName}" <${input.to}>` : input.to,
+      from: `"${fromName}" <${getFromEmail()}>`,
+      to: toName ? `"${toName}" <${input.to}>` : input.to,
       subject: input.subject,
       html: input.htmlContent,
       text: input.textContent,

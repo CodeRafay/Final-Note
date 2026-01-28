@@ -108,7 +108,7 @@ Any PostgreSQL 14+ database will work. Ensure:
 1. Enable 2-Step Verification on your Google Account
 2. Generate an App Password:
    - Go to Google Account → Security → 2-Step Verification → App passwords
-   - Select "Mail" and your device
+   - Enter a descriptive name for the password (e.g., "Final Note App")
    - Copy the generated 16-character password
 3. Configure environment variables:
    - `GMAIL_USER`: Your full Gmail address (e.g., yourname@gmail.com)

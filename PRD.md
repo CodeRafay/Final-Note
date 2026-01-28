@@ -76,7 +76,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 - **Nodemailer with Gmail SMTP**
 - Transactional email via Gmail SMTP
-- Free tier with Gmail (up to ~500 emails/day)
+- 500 emails/day for personal Gmail, 2,000/day for Google Workspace
 
 ### Deployment
 
@@ -199,7 +199,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 ### Action (MVP)
 
-- Send emails to recipients via MailerSend
+- Send emails to recipients via Nodemailer with Gmail SMTP
 
 ---
 
@@ -307,7 +307,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 - id (uuid, PK)
 - message_id (FK)
-- provider ('mailersend')
+- provider ('nodemailer')
 - status (pending | sent | failed)
 - provider_response (JSONB)
 - attempted_at
