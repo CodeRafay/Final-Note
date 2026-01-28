@@ -22,7 +22,7 @@ This is a comprehensive development roadmap for Final Note - an open source, sel
 - [ ] Install and configure necessary dependencies
   - [ ] `@types/node`
   - [ ] `csv-parser` or `xlsx` for file-based data storage
-  - [ ] `nodemailer` for email sending
+  - [ ] `nodemailer` for email sending (with Gmail SMTP)
   - [ ] `crypto` for encryption/decryption
   - [ ] `cron` or `node-cron` for scheduling tasks
   - [ ] `zod` for data validation
@@ -141,7 +141,7 @@ This is a comprehensive development roadmap for Final Note - an open source, sel
 ### 4.1 Email Service Setup
 
 - [ ] Create `lib/emailService.ts`
-  - [ ] SMTP configuration for Gmail/custom provider
+  - [ ] Gmail SMTP configuration via Nodemailer
   - [ ] Email template system
   - [ ] Email queue management
   - [ ] Retry logic for failed sends

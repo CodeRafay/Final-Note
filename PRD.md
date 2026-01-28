@@ -74,9 +74,9 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 ### Email
 
-- **MailerSend (mandatory)**
-- Transactional email via REST API
-- Free tier (~3,000 emails/month)
+- **Nodemailer with Gmail SMTP**
+- Transactional email via Gmail SMTP
+- Free tier with Gmail (up to ~500 emails/day)
 
 ### Deployment
 
@@ -218,11 +218,11 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 
 ---
 
-## 12. Email Delivery (MailerSend)
+## 12. Email Delivery (Nodemailer with Gmail SMTP)
 
 ### Provider
 
-- **MailerSend (mandatory)**
+- **Nodemailer with Gmail SMTP**
 
 ### Use Cases
 
@@ -436,7 +436,7 @@ You control the check-in intervals—ranging from days to years. By default, Fin
 1. Create Prisma project
 2. Apply SQL migrations
 3. Configure RLS
-4. Configure MailerSend
+4. Configure Gmail SMTP
 5. Set Vercel environment variables
 6. Deploy Next.js app
 7. Enable cron jobs

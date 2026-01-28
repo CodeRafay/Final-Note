@@ -9,7 +9,7 @@ A secure, verification-based dead man's switch web application. Final Note allow
 - **⏰ Flexible Check-in Intervals**: Configure check-in frequency from days to years
 - **📋 Complete Audit Trail**: Every action is logged for transparency
 - **🛡️ Multiple Safety Layers**: Grace periods, verification quorums, and final delays prevent accidental triggers
-- **📧 Reliable Email Delivery**: Uses MailerSend for transactional email delivery with idempotency
+- **📧 Reliable Email Delivery**: Uses Nodemailer with Gmail SMTP for transactional email delivery with idempotency
 
 ## Tech Stack
 
@@ -17,7 +17,7 @@ A secure, verification-based dead man's switch web application. Final Note allow
 - **Backend**: Next.js API Routes
 - **Database**: PostgreSQL with Prisma ORM
 - **Authentication**: Custom JWT-based auth with session management
-- **Email**: MailerSend
+- **Email**: Nodemailer with Gmail SMTP
 - **Deployment**: Vercel
 
 ## Quick Start
@@ -26,7 +26,7 @@ A secure, verification-based dead man's switch web application. Final Note allow
 
 - Node.js 18+
 - PostgreSQL database
-- MailerSend account (for email delivery)
+- Gmail account with App Password enabled (for email delivery)
 
 ### Local Development
 
@@ -49,8 +49,9 @@ A secure, verification-based dead man's switch web application. Final Note allow
    - `DATABASE_URL`: PostgreSQL connection string
    - `JWT_SECRET`: Random 32+ character string for JWT signing
    - `ENCRYPTION_KEY`: 64 hex characters (32 bytes) for message encryption
-   - `MAILERSEND_API_KEY`: Your MailerSend API key
-   - `MAILERSEND_FROM_EMAIL`: Verified sender email
+   - `GMAIL_USER`: Your Gmail email address
+   - `GMAIL_PASS`: Gmail App Password (generate from Google Account settings)
+   - `GMAIL_FROM_NAME`: Display name for sent emails (default: "Final Note")
    - `NEXT_PUBLIC_APP_URL`: Your app URL (http://localhost:3000 for dev)
    - `CRON_SECRET`: Secret for authenticating cron job requests
 

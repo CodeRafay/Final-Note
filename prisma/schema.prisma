@@ -217,7 +217,7 @@ model VerificationVoteRecord {
 model EmailDelivery {
   id               String              @id @default(cuid())
   messageId        String              @map("message_id")
-  provider         String              @default("mailersend")
+  provider         String              @default("nodemailer")
   status           EmailDeliveryStatus @default(PENDING)
   providerResponse Json?               @map("provider_response")
   providerMessageId String?            @map("provider_message_id")
