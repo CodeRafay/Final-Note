@@ -7,7 +7,7 @@ This guide covers deploying Final Note to production.
 Before deploying, ensure you have:
 - A Vercel account
 - A PostgreSQL database (Supabase, Neon, or other)
-- A MailerSend account with verified domain
+- A Gmail account with App Password enabled
 - Required secrets generated
 
 ## Quick Deployment (Vercel)
@@ -31,9 +31,9 @@ In Vercel project settings, add these environment variables:
 DATABASE_URL=postgresql://user:password@host:5432/database
 JWT_SECRET=your-32-character-random-string
 ENCRYPTION_KEY=your-64-hex-character-key
-MAILERSEND_API_KEY=your-mailersend-api-key
-MAILERSEND_FROM_EMAIL=noreply@yourdomain.com
-MAILERSEND_FROM_NAME=Final Note
+GMAIL_USER=your-gmail-address@gmail.com
+GMAIL_PASS=your-gmail-app-password
+GMAIL_FROM_NAME=Final Note
 NEXT_PUBLIC_APP_URL=https://your-domain.vercel.app
 CRON_SECRET=your-cron-secret
 APP_ENV=production
@@ -103,24 +103,24 @@ Any PostgreSQL 14+ database will work. Ensure:
 
 ## Email Setup
 
-### MailerSend Configuration
+### Gmail SMTP Configuration
 
-1. Create a MailerSend account
-2. Add and verify your sending domain
-3. Create an API token with email sending permissions
-4. Configure environment variables:
-   - `MAILERSEND_API_KEY`: Your API token
-   - `MAILERSEND_FROM_EMAIL`: Your verified email
-   - `MAILERSEND_FROM_NAME`: "Final Note" or your preference
+1. Enable 2-Step Verification on your Google Account
+2. Generate an App Password:
+   - Go to Google Account → Security → 2-Step Verification → App passwords
+   - Enter a descriptive name for the password (e.g., "Final Note App")
+   - Copy the generated 16-character password
+3. Configure environment variables:
+   - `GMAIL_USER`: Your full Gmail address (e.g., yourname@gmail.com)
+   - `GMAIL_PASS`: The 16-character App Password (not your regular password)
+   - `GMAIL_FROM_NAME`: Display name for emails (default: "Final Note")
 
-### Domain Verification
+### Email Deliverability Tips
 
 For best deliverability:
-1. Add SPF record to your domain
-2. Add DKIM record to your domain
-3. Add DMARC record to your domain
-
-MailerSend provides these records in the domain settings.
+- Use a dedicated Gmail account for sending
+- Keep sending volume reasonable to avoid rate limits
+- Monitor for bounced emails in Gmail's sent folder
 
 ## Cron Jobs
 
@@ -262,9 +262,10 @@ Consider adding rate limiting for:
 - Ensure SSL is enabled
 
 **Email Not Sending**
-- Verify MailerSend API key
-- Check domain is verified
-- Review MailerSend logs
+- Verify GMAIL_USER and GMAIL_PASS are correct
+- Ensure App Password is used (not regular password)
+- Check 2-Step Verification is enabled on Google Account
+- Review Gmail sending limits
 
 **Cron Jobs Not Running**
 - Verify `CRON_SECRET` is set

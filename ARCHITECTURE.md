@@ -33,7 +33,7 @@ Final Note is a centralized dead man's switch application built with Next.js and
 - **HTTP-only Cookies**: Secure session storage
 
 ### Email
-- **MailerSend**: Transactional email delivery
+- **Nodemailer**: Transactional email via Gmail SMTP
 - **Idempotent Sending**: Prevents duplicate delivery
 
 ### Background Jobs

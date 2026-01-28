@@ -1,29 +1,69 @@
-// Email service using MailerSend
-import { MailerSend, EmailParams, Recipient as MSRecipient, Sender } from 'mailersend';
+// Email service using Nodemailer with Gmail SMTP
+import nodemailer from 'nodemailer';
+import type { Transporter } from 'nodemailer';
 import { prisma } from './database';
 import { createAuditLog } from './audit';
 import type { SendEmailInput } from '@/types/email';
 import { ENTITY_TYPES, AUDIT_ACTIONS } from '@/types/audit';
 
-let mailerSend: MailerSend | null = null;
+let transporter: Transporter | null = null;
 
-function getMailerSend(): MailerSend {
-  if (!mailerSend) {
-    const apiKey = process.env.MAILERSEND_API_KEY;
-    if (!apiKey) {
-      throw new Error('MAILERSEND_API_KEY is not configured');
+/**
+ * Sanitize a name to prevent email header injection.
+ * Removes or escapes characters that could be used for header injection.
+ */
+function sanitizeName(name: string): string {
+  // Remove newlines, carriage returns, and control characters that could enable header injection
+  // Escape backslashes first, then double quotes
+  return name
+    .replace(/[\r\n\x00-\x1f]/g, '')
+    .replace(/\\/g, '\\\\')
+    .replace(/"/g, '\\"')
+    .trim();
+}
+
+/**
+ * Get or create the Nodemailer transporter configured for Gmail SMTP
+ */
+function getTransporter(): Transporter {
+  if (!transporter) {
+    const user = process.env.GMAIL_USER;
+    const pass = process.env.GMAIL_PASS;
+    
+    if (!user || !pass) {
+      throw new Error('GMAIL_USER and GMAIL_PASS must be configured');
     }
-    mailerSend = new MailerSend({ apiKey });
+    
+    transporter = nodemailer.createTransport({
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // Use SSL
+      auth: {
+        user,
+        pass,
+      },
+    });
   }
-  return mailerSend;
+  return transporter;
+}
+
+/**
+ * Reset the transporter (useful for testing or credential changes)
+ */
+export function resetTransporter(): void {
+  transporter = null;
 }
 
 function getFromEmail(): string {
-  return process.env.MAILERSEND_FROM_EMAIL || 'noreply@example.com';
+  const user = process.env.GMAIL_USER;
+  if (!user) {
+    throw new Error('GMAIL_USER must be configured');
+  }
+  return user;
 }
 
 function getFromName(): string {
-  return process.env.MAILERSEND_FROM_NAME || 'Final Note';
+  return process.env.GMAIL_FROM_NAME || 'Final Note';
 }
 
 /**
@@ -35,29 +75,25 @@ export async function sendEmail(input: SendEmailInput): Promise<{
   error?: string;
 }> {
   try {
-    const ms = getMailerSend();
+    const transport = getTransporter();
     
-    const recipients = [new MSRecipient(input.to, input.toName || input.to)];
-    const sender = new Sender(getFromEmail(), getFromName());
+    // Sanitize names to prevent header injection
+    const fromName = sanitizeName(getFromName());
+    const toName = input.toName ? sanitizeName(input.toName) : undefined;
     
-    const emailParams = new EmailParams()
-      .setFrom(sender)
-      .setTo(recipients)
-      .setSubject(input.subject)
-      .setHtml(input.htmlContent);
+    const mailOptions = {
+      from: `"${fromName}" <${getFromEmail()}>`,
+      to: toName ? `"${toName}" <${input.to}>` : input.to,
+      subject: input.subject,
+      html: input.htmlContent,
+      text: input.textContent,
+    };
     
-    if (input.textContent) {
-      emailParams.setText(input.textContent);
-    }
-    
-    const response = await ms.email.send(emailParams);
-    
-    // MailerSend returns x-message-id header
-    const messageId = response.headers?.['x-message-id'] || undefined;
+    const result = await transport.sendMail(mailOptions);
     
     return {
       success: true,
-      messageId,
+      messageId: result.messageId,
     };
   } catch (error) {
     console.error('Email sending failed:', error);
@@ -111,7 +147,7 @@ export async function sendFinalMessage(
   const delivery = await prisma.emailDelivery.create({
     data: {
       messageId,
-      provider: 'mailersend',
+      provider: 'nodemailer',
       status: 'PENDING',
     },
   });

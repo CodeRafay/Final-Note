@@ -103,8 +103,9 @@ Consider implementing rate limiting for:
 ## Email Security
 
 ### Sender Authentication
-- Configure SPF, DKIM, and DMARC for your sending domain
-- Use verified sender addresses in MailerSend
+- Use Gmail App Passwords (not regular passwords)
+- Enable 2-Step Verification on your Google Account
+- Configure GMAIL_USER and GMAIL_PASS environment variables securely
 
 ### Idempotent Delivery
 - Each message delivery tracked in database
@@ -133,7 +134,8 @@ Consider implementing rate limiting for:
 | `DATABASE_URL` | Database connection | From provider |
 | `JWT_SECRET` | Session signing | `openssl rand -hex 32` |
 | `ENCRYPTION_KEY` | Message encryption | `openssl rand -hex 32` |
-| `MAILERSEND_API_KEY` | Email sending | From MailerSend |
+| `GMAIL_USER` | Gmail SMTP username | Your Gmail address |
+| `GMAIL_PASS` | Gmail SMTP password | Google App Password |
 | `CRON_SECRET` | Cron authentication | `openssl rand -hex 16` |
 
 ### Best Practices
@@ -184,7 +186,7 @@ Consider implementing rate limiting for:
 - [ ] All environment variables set securely
 - [ ] HTTPS enforced
 - [ ] Database properly secured
-- [ ] Email domain authenticated
+- [ ] Email credentials verified (Gmail App Password)
 - [ ] Audit logging verified
 - [ ] Admin account created
 - [ ] Backup strategy in place

@@ -10,10 +10,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   SESSION_EXPIRY_DAYS: z.string().transform(Number).default('7'),
   
-  // MailerSend
-  MAILERSEND_API_KEY: z.string().min(1, 'MAILERSEND_API_KEY is required'),
-  MAILERSEND_FROM_EMAIL: z.string().email('MAILERSEND_FROM_EMAIL must be a valid email'),
-  MAILERSEND_FROM_NAME: z.string().default('Final Note'),
+  // Gmail SMTP
+  GMAIL_USER: z.string().email('GMAIL_USER must be a valid email'),
+  GMAIL_PASS: z.string().min(1, 'GMAIL_PASS is required'),
+  GMAIL_FROM_NAME: z.string().default('Final Note'),
   
   // Application
   NEXT_PUBLIC_APP_URL: z.string().url('NEXT_PUBLIC_APP_URL must be a valid URL'),
