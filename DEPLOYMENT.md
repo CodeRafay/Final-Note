@@ -277,6 +277,12 @@ Consider adding rate limiting for:
 - Verify all environment variables are set
 - Review build logs in Vercel
 
+**Foreign Key Constraint Error on Login/Register (audit_logs_entity_id_fkey)**
+- This error occurs if the database has an errant foreign key constraint on the `audit_logs` table
+- Run the migration to fix: `psql $DATABASE_URL -f prisma/migrations/20260129000000_fix_audit_logs_entity_id_fkey/migration.sql`
+- Or connect to your database and run: `ALTER TABLE "audit_logs" DROP CONSTRAINT IF EXISTS "audit_logs_entity_id_fkey";`
+- Then run `npx prisma db push` to ensure the schema is in sync
+
 ### Getting Help
 
 1. Check the README and documentation
