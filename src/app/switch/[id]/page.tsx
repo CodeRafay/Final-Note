@@ -53,18 +53,21 @@ export default function SwitchDetailPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [checkingIn, setCheckingIn] = useState(false);
+  const [actionError, setActionError] = useState('');
 
   // Add recipient form
   const [showAddRecipient, setShowAddRecipient] = useState(false);
   const [recipientEmail, setRecipientEmail] = useState('');
   const [recipientName, setRecipientName] = useState('');
   const [addingRecipient, setAddingRecipient] = useState(false);
+  const [recipientError, setRecipientError] = useState('');
 
   // Add verifier form
   const [showAddVerifier, setShowAddVerifier] = useState(false);
   const [verifierEmail, setVerifierEmail] = useState('');
   const [verifierName, setVerifierName] = useState('');
   const [addingVerifier, setAddingVerifier] = useState(false);
+  const [verifierError, setVerifierError] = useState('');
 
   // Add message form
   const [showAddMessage, setShowAddMessage] = useState(false);
@@ -72,6 +75,7 @@ export default function SwitchDetailPage() {
   const [messageSubject, setMessageSubject] = useState('');
   const [messageContent, setMessageContent] = useState('');
   const [addingMessage, setAddingMessage] = useState(false);
+  const [messageError, setMessageError] = useState('');
 
   const fetchData = useCallback(async () => {
     try {
@@ -126,6 +130,7 @@ export default function SwitchDetailPage() {
 
   const handleCheckIn = async () => {
     setCheckingIn(true);
+    setActionError('');
     try {
       const response = await fetch('/api/checkin', {
         method: 'POST',
@@ -135,9 +140,13 @@ export default function SwitchDetailPage() {
 
       if (response.ok) {
         await fetchData();
+      } else {
+        const data = await response.json();
+        setActionError(data.error || 'Check-in failed');
       }
     } catch (err) {
       console.error('Check-in failed:', err);
+      setActionError('Check-in failed. Please try again.');
     } finally {
       setCheckingIn(false);
     }
@@ -146,6 +155,7 @@ export default function SwitchDetailPage() {
   const handleAddRecipient = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddingRecipient(true);
+    setRecipientError('');
     try {
       const response = await fetch('/api/recipients', {
         method: 'POST',
@@ -162,9 +172,13 @@ export default function SwitchDetailPage() {
         setRecipientName('');
         setShowAddRecipient(false);
         await fetchData();
+      } else {
+        const data = await response.json();
+        setRecipientError(data.error || 'Failed to add recipient');
       }
     } catch (err) {
       console.error('Failed to add recipient:', err);
+      setRecipientError('Failed to add recipient. Please try again.');
     } finally {
       setAddingRecipient(false);
     }
@@ -173,6 +187,7 @@ export default function SwitchDetailPage() {
   const handleAddVerifier = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddingVerifier(true);
+    setVerifierError('');
     try {
       const response = await fetch('/api/verifiers', {
         method: 'POST',
@@ -189,9 +204,13 @@ export default function SwitchDetailPage() {
         setVerifierName('');
         setShowAddVerifier(false);
         await fetchData();
+      } else {
+        const data = await response.json();
+        setVerifierError(data.error || 'Failed to add verifier');
       }
     } catch (err) {
       console.error('Failed to add verifier:', err);
+      setVerifierError('Failed to add verifier. Please try again.');
     } finally {
       setAddingVerifier(false);
     }
@@ -200,6 +219,7 @@ export default function SwitchDetailPage() {
   const handleAddMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     setAddingMessage(true);
+    setMessageError('');
     try {
       const response = await fetch('/api/messages', {
         method: 'POST',
@@ -218,9 +238,13 @@ export default function SwitchDetailPage() {
         setMessageContent('');
         setShowAddMessage(false);
         await fetchData();
+      } else {
+        const data = await response.json();
+        setMessageError(data.error || 'Failed to add message');
       }
     } catch (err) {
       console.error('Failed to add message:', err);
+      setMessageError('Failed to add message. Please try again.');
     } finally {
       setAddingMessage(false);
     }
@@ -287,13 +311,20 @@ export default function SwitchDetailPage() {
       </header>
 
       <main className="container mx-auto px-6 py-8 max-w-4xl">
+        {/* Action Error */}
+        {actionError && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 text-red-700 text-sm mb-6">
+            {actionError}
+          </div>
+        )}
+
         {/* Switch Header */}
         <div className="bg-white rounded-xl border p-6 mb-6">
           <div className="flex items-start justify-between mb-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900 mb-2">{switchData?.name}</h1>
               <span className={`text-sm px-3 py-1 rounded-full border ${getStatusColor(switchData?.status || '')}`}>
-                {switchData?.status.replace('_', ' ')}
+                {switchData?.status.split('_').join(' ')}
               </span>
             </div>
             {switchData && ['ACTIVE', 'OVERDUE', 'GRACE_PERIOD'].includes(switchData.status) && (
@@ -349,6 +380,11 @@ export default function SwitchDetailPage() {
 
           {showAddRecipient && (
             <form onSubmit={handleAddRecipient} className="p-6 border-b bg-gray-50">
+              {recipientError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">
+                  {recipientError}
+                </div>
+              )}
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
@@ -430,6 +466,11 @@ export default function SwitchDetailPage() {
 
             {showAddVerifier && (
               <form onSubmit={handleAddVerifier} className="p-6 border-b bg-gray-50">
+                {verifierError && (
+                  <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">
+                    {verifierError}
+                  </div>
+                )}
                 <div className="grid md:grid-cols-2 gap-4 mb-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
@@ -513,6 +554,11 @@ export default function SwitchDetailPage() {
 
           {showAddMessage && (
             <form onSubmit={handleAddMessage} className="p-6 border-b bg-gray-50">
+              {messageError && (
+                <div className="bg-red-50 border border-red-200 rounded-lg p-3 text-red-700 text-sm mb-4">
+                  {messageError}
+                </div>
+              )}
               <div className="space-y-4 mb-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Recipient *</label>
