@@ -106,7 +106,6 @@ model Switch {
   recipients              Recipient[]
   verifiers               Verifier[]
   verificationRequests    VerificationRequest[]
-  auditLogs               AuditLog[]
 
   @@index([userId])
   @@index([status])
@@ -248,8 +247,8 @@ model AuditLog {
   userAgent  String?  @map("user_agent")
   createdAt  DateTime @default(now()) @map("created_at")
 
-  // Optional relation to switch for easy filtering
-  switch     Switch?  @relation(fields: [entityId], references: [id], onDelete: SetNull)
+  // Note: entityId is intentionally not a foreign key as it can reference
+  // different entity types (users, switches, recipients, etc.)
 
   @@index([entityType, entityId])
   @@index([userId])
