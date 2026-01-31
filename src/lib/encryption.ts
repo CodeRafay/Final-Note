@@ -110,3 +110,28 @@ export function generateUrlSafeToken(length: number = 32): string {
 export function hashToken(token: string): string {
   return createHash('sha256').update(token).digest('hex');
 }
+
+/**
+ * Generate a secure 6-digit OTP for verification
+ * Uses crypto.randomInt for cryptographically secure random number generation
+ */
+export function generateOtp(): string {
+  // Generate a random number between 0 and 999999
+  const randomValue = randomBytes(4).readUInt32BE(0);
+  const otp = (randomValue % 1000000).toString().padStart(6, '0');
+  return otp;
+}
+
+/**
+ * Hash an OTP for secure storage
+ */
+export function hashOtp(otp: string): string {
+  return createHash('sha256').update(otp).digest('hex');
+}
+
+/**
+ * Verify an OTP against its hash
+ */
+export function verifyOtp(otp: string, hash: string): boolean {
+  return hashOtp(otp) === hash;
+}
