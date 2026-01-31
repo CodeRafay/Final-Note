@@ -319,7 +319,7 @@ export async function sendOtpVerificationRequest(
     toName: verifierName || undefined,
     subject: `Action Required: Verify Status of ${ownerName}`,
     htmlContent: getOtpVerificationRequestTemplate(verifierName, ownerName, verifyUrl, otp, expiresAt),
-    textContent: `Hi ${verifierName || 'there'},\n\nYou are receiving this because you have been designated as a trusted verifier for ${ownerName}.\n\nVerification is now required.\n\nYour verification code is: ${otp}\n\nPlease visit ${verifyUrl} and enter this code to verify the status.\n\nThis code will expire on ${expiresAt.toISOString()}.\n\nImportant: Only confirm if you have verified that ${ownerName} is deceased or permanently incapacitated.\n\n- Final Note`,
+    textContent: `Hi ${verifierName || 'there'},\n\nYou are receiving this because you have been designated as a trusted verifier for ${ownerName}.\n\nVerification is now required.\n\nYour verification code is: ${otp}\n\nPlease visit ${verifyUrl} and enter this code to verify the status.\n\nThis code will expire on ${expiresAt.toLocaleString()}.\n\nImportant: Only confirm if you have verified that ${ownerName} is deceased or permanently incapacitated.\n\n- Final Note`,
   });
   
   return result.success;

@@ -39,7 +39,8 @@ export default function VerifyPage() {
         } else {
           setError(data.error || 'Invalid or expired verification link');
         }
-      } catch {
+      } catch (err) {
+        console.error('Failed to load verification details:', err);
         setError('Failed to load verification details');
       } finally {
         setLoading(false);
@@ -88,7 +89,8 @@ export default function VerifyPage() {
       } else {
         setError(data.error || 'Verification failed');
       }
-    } catch {
+    } catch (err) {
+      console.error('Failed to submit verification:', err);
       setError('Failed to submit verification');
     } finally {
       setSubmitting(false);
