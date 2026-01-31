@@ -283,6 +283,48 @@ export async function sendVerificationRequest(
   return result.success;
 }
 
+/**
+ * Send verifier role notification email
+ * Sent when a user adds a verifier to inform them of their selection
+ */
+export async function sendVerifierNotification(
+  verifierEmail: string,
+  verifierName: string | null
+): Promise<boolean> {
+  const result = await sendEmail({
+    to: verifierEmail,
+    toName: verifierName || undefined,
+    subject: "You've Been Selected as a Trusted Contact",
+    htmlContent: getVerifierNotificationTemplate(verifierName),
+    textContent: `Hi ${verifierName || 'there'},\n\nYou have been selected as a trusted contact for an important matter.\n\nNo action is required at this time. You may receive further instructions in the future.\n\nThank you for being someone's trusted contact.`,
+  });
+  
+  return result.success;
+}
+
+/**
+ * Send OTP-based verification request email
+ * Sent when user is declared overdue/deceased and verification is needed
+ */
+export async function sendOtpVerificationRequest(
+  verifierEmail: string,
+  verifierName: string | null,
+  ownerName: string,
+  verifyUrl: string,
+  otp: string,
+  expiresAt: Date
+): Promise<boolean> {
+  const result = await sendEmail({
+    to: verifierEmail,
+    toName: verifierName || undefined,
+    subject: `Action Required: Verify Status of ${ownerName}`,
+    htmlContent: getOtpVerificationRequestTemplate(verifierName, ownerName, verifyUrl, otp, expiresAt),
+    textContent: `Hi ${verifierName || 'there'},\n\nYou are receiving this because you have been designated as a trusted verifier for ${ownerName}.\n\nVerification is now required.\n\nYour verification code is: ${otp}\n\nPlease visit ${verifyUrl} and enter this code to verify the status.\n\nThis code will expire on ${expiresAt.toLocaleString()}.\n\nImportant: Only confirm if you have verified that ${ownerName} is deceased or permanently incapacitated.\n\n- Final Note`,
+  });
+  
+  return result.success;
+}
+
 // Email template functions
 
 /**
@@ -452,6 +494,91 @@ function getVerificationRequestTemplate(
       <a href="${verifyUrl}" class="btn">Submit Verification</a>
     </p>
     <p>If you cannot verify or are unsure, you may choose to deny verification, which will reset the switch and allow the user to check in again.</p>
+  </div>
+  <div class="footer">
+    <p>Final Note - Secure Dead Man's Switch</p>
+  </div>
+</body>
+</html>
+`;
+}
+
+function getVerifierNotificationTemplate(
+  verifierName: string | null
+): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #1a1a2e; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+    .info-box { background: #e8f4f8; border: 1px solid #b8d4e3; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>You've Been Selected as a Trusted Contact</h1>
+  </div>
+  <div class="content">
+    <p>Dear ${verifierName || 'Friend'},</p>
+    <p>You have been selected as a trusted contact for an important matter.</p>
+    <div class="info-box">
+      <strong>No action is required at this time.</strong>
+      <p style="margin-bottom: 0;">You may receive further instructions in the future.</p>
+    </div>
+    <p>Thank you for being someone's trusted contact.</p>
+  </div>
+  <div class="footer">
+    <p>This is an automated notification.</p>
+  </div>
+</body>
+</html>
+`;
+}
+
+function getOtpVerificationRequestTemplate(
+  verifierName: string | null,
+  ownerName: string,
+  verifyUrl: string,
+  otp: string,
+  expiresAt: Date
+): string {
+  return `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; }
+    .header { background: #1a1a2e; color: white; padding: 20px; border-radius: 8px 8px 0 0; text-align: center; }
+    .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 8px 8px; }
+    .important { background: #fff3cd; border: 1px solid #ffc107; padding: 15px; border-radius: 8px; margin: 15px 0; }
+    .otp-box { background: #1a1a2e; color: white; font-size: 32px; letter-spacing: 8px; padding: 20px 30px; border-radius: 8px; margin: 20px 0; text-align: center; font-family: monospace; }
+    .btn { display: inline-block; background: #1a1a2e; color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; margin: 20px 0; }
+    .footer { text-align: center; color: #666; font-size: 12px; margin-top: 20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Verification Required</h1>
+  </div>
+  <div class="content">
+    <p>Dear ${verifierName || 'Verifier'},</p>
+    <p>You have been designated as a trusted verifier by <strong>${ownerName}</strong>.</p>
+    <p>Verification is now required. Please use the code below to verify the status.</p>
+    <div class="otp-box">${otp}</div>
+    <p style="text-align: center;">
+      <a href="${verifyUrl}" class="btn">Verify Now</a>
+    </p>
+    <div class="important">
+      <strong>Important:</strong> Only confirm that ${ownerName} is deceased or permanently incapacitated if you have independently verified this information.
+    </div>
+    <p><strong>This code expires:</strong> ${expiresAt.toLocaleString()}</p>
+    <p>If you cannot verify or are unsure, you may choose to deny verification.</p>
   </div>
   <div class="footer">
     <p>Final Note - Secure Dead Man's Switch</p>

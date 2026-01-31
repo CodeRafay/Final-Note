@@ -69,11 +69,16 @@ export const AUDIT_ACTIONS = {
 
   // Verifier actions
   VERIFIER_INVITED: 'verifier_invited',
+  VERIFIER_NOTIFIED: 'verifier_notified',
   VERIFIER_ACCEPTED: 'verifier_accepted',
   VERIFIER_REVOKED: 'verifier_revoked',
 
   // Verification actions
   VERIFICATION_STARTED: 'verification_started',
+  VERIFICATION_OTP_CREATED: 'verification_otp_created',
+  VERIFICATION_OTP_SENT: 'verification_otp_sent',
+  VERIFICATION_OTP_VERIFIED: 'verification_otp_verified',
+  VERIFICATION_OTP_FAILED: 'verification_otp_failed',
   VERIFICATION_VOTE_SUBMITTED: 'verification_vote_submitted',
   VERIFICATION_COMPLETED: 'verification_completed',
   VERIFICATION_EXPIRED: 'verification_expired',

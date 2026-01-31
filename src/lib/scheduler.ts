@@ -3,7 +3,7 @@ import { prisma } from './database';
 import { createAuditLog } from './audit';
 import { transitionSwitchState } from './stateMachine';
 import { createVerificationRequest } from './verificationSystem';
-import { sendCheckInReminder, sendGracePeriodWarning, sendVerificationRequest, sendFinalMessage } from './emailService';
+import { sendCheckInReminder, sendGracePeriodWarning, sendOtpVerificationRequest, sendFinalMessage } from './emailService';
 import { generateUrlSafeToken } from './encryption';
 import { SwitchStatus } from '@/types/switch';
 import { ENTITY_TYPES, AUDIT_ACTIONS } from '@/types/audit';
@@ -169,26 +169,36 @@ export async function processGracePeriodExpiry(): Promise<{
     try {
       if (sw.useVerifiers && sw.verifiers.length >= sw.requiredConfirmations) {
         // Create verification request and transition to PENDING_VERIFICATION
+        // This now returns tokens with OTP for each verifier
         const verificationRequest = await createVerificationRequest(sw.id);
         
-        // Send verification request emails to all verifiers
-        for (const verifier of sw.verifiers) {
-          const verificationToken = await prisma.verificationToken.findFirst({
-            where: {
-              verificationRequestId: verificationRequest.id,
-              verifierId: verifier.id,
-            },
-          });
-          
-          if (verificationToken) {
-            const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify/${verificationToken.token}`;
-            await sendVerificationRequest(
+        // Send OTP verification request emails to all verifiers
+        for (const tokenData of verificationRequest.tokens) {
+          const verifier = sw.verifiers.find(v => v.id === tokenData.verifierId);
+          if (verifier) {
+            const verifyUrl = `${process.env.NEXT_PUBLIC_APP_URL}/verify/${tokenData.token}`;
+            
+            // Send OTP-based verification email
+            const emailSent = await sendOtpVerificationRequest(
               verifier.email,
               verifier.name,
               sw.user.name || sw.user.email,
               verifyUrl,
+              tokenData.otp, // Plain OTP to send in email
               verificationRequest.expiresAt
             );
+            
+            // Log the email delivery
+            await createAuditLog({
+              entityType: ENTITY_TYPES.VERIFICATION_REQUEST,
+              entityId: verificationRequest.id,
+              action: AUDIT_ACTIONS.VERIFICATION_OTP_SENT,
+              metadata: {
+                verifierId: verifier.id,
+                email: verifier.email,
+                emailSent,
+              },
+            });
           }
         }
         

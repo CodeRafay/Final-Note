@@ -276,6 +276,8 @@ model VerificationToken {
   verificationRequestId String    @map("verification_request_id")
   verifierId            String    @map("verifier_id")
   token                 String    @unique
+  otp                   String?   // Hashed 6-digit OTP for verification
+  otpExpiresAt          DateTime? @map("otp_expires_at") // OTP expiration timestamp
   expiresAt             DateTime  @map("expires_at")
   usedAt                DateTime? @map("used_at")
   createdAt             DateTime  @default(now()) @map("created_at")
